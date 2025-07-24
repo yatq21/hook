@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/cmd.exe
 @echo off
 
 :: 设置窗口标题
